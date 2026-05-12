@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -124,6 +123,14 @@
             transform: translateY(-2px);
         }
 
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -154,8 +161,6 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
-            overflow-x: auto;
-            display: block;
         }
 
         th, td {
@@ -168,6 +173,8 @@
             background: #f8f9fa;
             font-weight: bold;
             color: #333;
+            position: sticky;
+            top: 0;
         }
 
         tr:hover {
@@ -178,6 +185,10 @@
             padding: 5px 10px;
             font-size: 12px;
             margin: 0 3px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
         }
 
         .delete-btn {
@@ -186,14 +197,6 @@
 
         .edit-btn {
             background: #28a745;
-        }
-
-        .delete-btn:hover {
-            background: #c82333;
-        }
-
-        .edit-btn:hover {
-            background: #218838;
         }
 
         .message {
@@ -236,6 +239,38 @@
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .dynamic-field {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .remove-field {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .add-field-btn {
+            background: #28a745;
+            margin-top: 10px;
+        }
+
+        .field-type-select {
+            margin-bottom: 10px;
         }
 
         @media (max-width: 768px) {
@@ -245,6 +280,8 @@
             
             table {
                 font-size: 12px;
+                display: block;
+                overflow-x: auto;
             }
             
             th, td {
@@ -258,7 +295,7 @@
     <div class="container">
         <header>
             <h1>📊 Система хранения и анализа данных</h1>
-            <p>Добавляйте, редактируйте и анализируйте свои данные</p>
+            <p>Добавляйте ЛЮБЫЕ данные - текст, числа, даты, что угодно!</p>
         </header>
 
         <div class="tabs">
@@ -271,31 +308,32 @@
         <!-- Вкладка добавления данных -->
         <div id="add-tab" class="tab-content active">
             <h2>Добавить новую запись</h2>
-            <form id="data-form">
-                <div class="form-group">
-                    <label>Название/Имя:</label>
-                    <input type="text" id="item-name" required placeholder="Введите название">
+            <div id="dynamic-fields-container">
+                <div class="dynamic-field" data-field-id="0">
+                    <button class="remove-field" onclick="removeField(0)" style="display:none">✖</button>
+                    <div class="form-group">
+                        <label>Название поля:</label>
+                        <input type="text" class="field-name" placeholder="Например: Имя, Продукт, Сумма..." value="Название">
+                    </div>
+                    <div class="form-group">
+                        <label>Тип данных:</label>
+                        <select class="field-type" onchange="changeFieldType(0)">
+                            <option value="text">📝 Текст</option>
+                            <option value="number">🔢 Число</option>
+                            <option value="date">📅 Дата</option>
+                            <option value="email">📧 Email</option>
+                            <option value="tel">📞 Телефон</option>
+                            <option value="color">🎨 Цвет</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Значение:</label>
+                        <input type="text" class="field-value" placeholder="Введите значение">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Категория:</label>
-                    <select id="item-category">
-                        <option value="Работа">Работа</option>
-                        <option value="Личное">Личное</option>
-                        <option value="Финансы">Финансы</option>
-                        <option value="Обучение">Обучение</option>
-                        <option value="Другое">Другое</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Значение (число):</label>
-                    <input type="number" id="item-value" step="any" required placeholder="Введите числовое значение">
-                </div>
-                <div class="form-group">
-                    <label>Описание:</label>
-                    <textarea id="item-description" rows="3" placeholder="Дополнительная информация"></textarea>
-                </div>
-                <button type="submit">💾 Сохранить данные</button>
-            </form>
+            </div>
+            <button class="add-field-btn" onclick="addField()">➕ Добавить еще поле</button>
+            <button onclick="saveData()" style="margin-left: 10px;">💾 Сохранить запись</button>
         </div>
 
         <!-- Вкладка просмотра данных -->
@@ -304,17 +342,14 @@
                 <button onclick="exportData()">📥 Экспорт в JSON</button>
                 <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
                 <button onclick="document.getElementById('import-file').click()">📤 Импорт из JSON</button>
-                <button onclick="clearAllData()" style="background:#dc3545">🗑️ Очистить все данные</button>
+                <button onclick="clearAllData()" class="btn-danger">🗑️ Очистить все данные</button>
+                <button onclick="loadData()" class="btn-success">🔄 Обновить</button>
             </div>
             <div style="overflow-x: auto;">
                 <table id="data-table">
-                    <thead>
+                    <thead id="table-header">
                         <tr>
                             <th>ID</th>
-                            <th>Название</th>
-                            <th>Категория</th>
-                            <th>Значение</th>
-                            <th>Описание</th>
                             <th>Дата создания</th>
                             <th>Действия</th>
                         </tr>
@@ -327,55 +362,43 @@
         <!-- Вкладка анализа данных -->
         <div id="analyze-tab" class="tab-content">
             <div class="stats-grid" id="stats-grid">
-                <!-- Статистика загрузится сюда -->
+                <div class="stat-card"><h3>Всего записей</h3><div class="value" id="total-count">0</div></div>
+                <div class="stat-card"><h3>Всего полей</h3><div class="value" id="total-fields">0</div></div>
+                <div class="stat-card"><h3>Уникальных значений</h3><div class="value" id="unique-values">0</div></div>
             </div>
             
             <div class="chart-container">
-                <h3>Распределение по категориям</h3>
-                <canvas id="category-chart"></canvas>
+                <h3>Анализ числовых данных</h3>
+                <canvas id="numeric-chart"></canvas>
             </div>
             
             <div class="chart-container">
-                <h3>Топ-10 по значению</h3>
-                <canvas id="top-values-chart"></canvas>
-            </div>
-            
-            <div class="chart-container">
-                <h3>Анализ по времени</h3>
-                <canvas id="timeline-chart"></canvas>
+                <h3>Популярность полей</h3>
+                <canvas id="fields-chart"></canvas>
             </div>
         </div>
 
         <!-- Вкладка управления -->
         <div id="manage-tab" class="tab-content">
-            <h2>Фильтрация и поиск</h2>
+            <h2>Поиск и фильтрация</h2>
             <div class="form-group">
-                <label>Поиск по названию:</label>
-                <input type="text" id="search-name" placeholder="Введите название..." onkeyup="filterData()">
+                <label>🔍 Поиск по всем данным:</label>
+                <input type="text" id="global-search" placeholder="Введите текст для поиска..." onkeyup="filterData()">
             </div>
             <div class="form-group">
-                <label>Фильтр по категории:</label>
-                <select id="filter-category" onchange="filterData()">
-                    <option value="all">Все категории</option>
-                    <option value="Работа">Работа</option>
-                    <option value="Личное">Личное</option>
-                    <option value="Финансы">Финансы</option>
-                    <option value="Обучение">Обучение</option>
-                    <option value="Другое">Другое</option>
-                </select>
+                <label>📅 Фильтр по дате:</label>
+                <input type="date" id="date-filter" onchange="filterData()">
             </div>
-            <div class="form-group">
-                <label>Диапазон значений:</label>
-                <input type="number" id="min-value" placeholder="Минимум" onkeyup="filterData()">
-                <input type="number" id="max-value" placeholder="Максимум" onkeyup="filterData()" style="margin-top:10px">
-            </div>
-            <div id="filtered-stats" style="margin-top:20px; padding:15px; background:#f8f9fa; border-radius:10px"></div>
+            <div id="filtered-results" style="margin-top:20px"></div>
+            
+            <h2 style="margin-top: 40px;">Статистика по полям</h2>
+            <div id="fields-statistics"></div>
         </div>
     </div>
 
     <script>
-        let allData = [];
-        let categoryChart, topValuesChart, timelineChart;
+        let allRecords = [];
+        let currentEditId = null;
 
         // Переключение вкладок
         function switchTab(tab) {
@@ -389,10 +412,13 @@
             document.getElementById(`${tab}-tab`).classList.add('active');
             event.target.classList.add('active');
             
+            if (tab === 'view') {
+                loadData();
+            }
             if (tab === 'analyze') {
                 loadAnalysis();
             }
-            if (tab === 'view') {
+            if (tab === 'manage') {
                 loadData();
             }
         }
@@ -406,336 +432,404 @@
             setTimeout(() => msgDiv.remove(), 3000);
         }
 
-        // Загрузка всех данных
-        async function loadData() {
-            try {
-                const response = await fetch('/api/data');
-                allData = await response.json();
-                displayData(allData);
-                updateFilteredStats(allData);
-            } catch (error) {
-                console.error('Ошибка загрузки данных:', error);
+        // Добавление нового поля
+        let fieldCounter = 1;
+        function addField() {
+            const container = document.getElementById('dynamic-fields-container');
+            const fieldId = fieldCounter++;
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'dynamic-field';
+            fieldDiv.setAttribute('data-field-id', fieldId);
+            fieldDiv.innerHTML = `
+                <button class="remove-field" onclick="removeField(${fieldId})">✖</button>
+                <div class="form-group">
+                    <label>Название поля:</label>
+                    <input type="text" class="field-name" placeholder="Например: Имя, Продукт, Сумма..." value="Поле ${fieldId}">
+                </div>
+                <div class="form-group">
+                    <label>Тип данных:</label>
+                    <select class="field-type" onchange="changeFieldType(${fieldId})">
+                        <option value="text">📝 Текст</option>
+                        <option value="number">🔢 Число</option>
+                        <option value="date">📅 Дата</option>
+                        <option value="email">📧 Email</option>
+                        <option value="tel">📞 Телефон</option>
+                        <option value="color">🎨 Цвет</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Значение:</label>
+                    <input type="text" class="field-value" placeholder="Введите значение">
+                </div>
+            `;
+            container.appendChild(fieldDiv);
+        }
+
+        function removeField(fieldId) {
+            const fields = document.querySelectorAll('.dynamic-field');
+            if (fields.length > 1) {
+                const field = document.querySelector(`.dynamic-field[data-field-id='${fieldId}']`);
+                if (field) field.remove();
+            } else {
+                showMessage('Должно быть хотя бы одно поле!', 'error');
             }
+        }
+
+        function changeFieldType(fieldId) {
+            const field = document.querySelector(`.dynamic-field[data-field-id='${fieldId}']`);
+            const typeSelect = field.querySelector('.field-type');
+            const valueInput = field.querySelector('.field-value');
+            const selectedType = typeSelect.value;
+            
+            valueInput.type = selectedType;
+            if (selectedType === 'color') {
+                valueInput.value = '#000000';
+            }
+        }
+
+        // Сохранение данных
+        function saveData() {
+            const fields = document.querySelectorAll('.dynamic-field');
+            const data = {};
+            
+            for (let field of fields) {
+                const name = field.querySelector('.field-name').value;
+                const type = field.querySelector('.field-type').value;
+                let value = field.querySelector('.field-value').value;
+                
+                if (!name || !value) {
+                    showMessage('Заполните все поля!', 'error');
+                    return;
+                }
+                
+                data[name] = {
+                    value: value,
+                    type: type
+                };
+            }
+            
+            // Загружаем существующие данные
+            let records = JSON.parse(localStorage.getItem('userData') || '[]');
+            
+            if (currentEditId !== null) {
+                // Редактирование
+                const index = records.findIndex(r => r.id === currentEditId);
+                if (index !== -1) {
+                    records[index] = {
+                        id: currentEditId,
+                        data: data,
+                        createdAt: records[index].createdAt,
+                        updatedAt: new Date().toISOString()
+                    };
+                    showMessage('Запись обновлена!');
+                }
+                currentEditId = null;
+            } else {
+                // Новая запись
+                const newRecord = {
+                    id: Date.now(),
+                    data: data,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                records.push(newRecord);
+                showMessage('Данные сохранены!');
+            }
+            
+            localStorage.setItem('userData', JSON.stringify(records));
+            
+            // Очищаем форму
+            document.getElementById('dynamic-fields-container').innerHTML = `
+                <div class="dynamic-field" data-field-id="0">
+                    <button class="remove-field" onclick="removeField(0)" style="display:none">✖</button>
+                    <div class="form-group">
+                        <label>Название поля:</label>
+                        <input type="text" class="field-name" placeholder="Например: Имя, Продукт, Сумма..." value="Название">
+                    </div>
+                    <div class="form-group">
+                        <label>Тип данных:</label>
+                        <select class="field-type" onchange="changeFieldType(0)">
+                            <option value="text">📝 Текст</option>
+                            <option value="number">🔢 Число</option>
+                            <option value="date">📅 Дата</option>
+                            <option value="email">📧 Email</option>
+                            <option value="tel">📞 Телефон</option>
+                            <option value="color">🎨 Цвет</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Значение:</label>
+                        <input type="text" class="field-value" placeholder="Введите значение">
+                    </div>
+                </div>
+            `;
+            fieldCounter = 1;
+            
+            loadData();
+        }
+
+        // Загрузка всех данных
+        function loadData() {
+            allRecords = JSON.parse(localStorage.getItem('userData') || '[]');
+            displayData(allRecords);
+            updateFieldsStatistics();
         }
 
         // Отображение данных в таблице
-        function displayData(data) {
+        function displayData(records) {
             const tbody = document.getElementById('data-list');
-            tbody.innerHTML = '';
+            const thead = document.getElementById('table-header');
             
-            data.forEach(item => {
-                const row = tbody.insertRow();
-                row.innerHTML = `
-                    <td>${item.id}</td>
-                    <td>${escapeHtml(item.name)}</td>
-                    <td>${item.category}</td>
-                    <td>${item.value}</td>
-                    <td>${escapeHtml(item.description || '')}</td>
-                    <td>${new Date(item.created_at).toLocaleString()}</td>
+            if (records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center">Нет данных</td></tr>';
+                thead.innerHTML = '<tr><th>ID</th><th>Дата создания</th><th>Действия</th></tr>';
+                return;
+            }
+            
+            // Собираем все уникальные названия полей
+            const allFields = new Set();
+            records.forEach(record => {
+                Object.keys(record.data).forEach(field => allFields.add(field));
+            });
+            
+            // Создаем заголовок таблицы
+            let headerHtml = '<tr><th>ID</th>';
+            Array.from(allFields).forEach(field => {
+                headerHtml += `<th>${field}</th>`;
+            });
+            headerHtml += '<th>Дата создания</th><th>Действия</th></tr>';
+            thead.innerHTML = headerHtml;
+            
+            // Заполняем данные
+            tbody.innerHTML = '';
+            records.forEach(record => {
+                let rowHtml = `<tr><td>${record.id}</td>`;
+                Array.from(allFields).forEach(field => {
+                    const value = record.data[field]?.value || '-';
+                    const type = record.data[field]?.type;
+                    let displayValue = value;
+                    if (type === 'color') {
+                        displayValue = `<div style="width:30px;height:30px;background:${value};border:1px solid #ddd;"></div>`;
+                    }
+                    rowHtml += `<td>${displayValue}</td>`;
+                });
+                rowHtml += `
+                    <td>${new Date(record.createdAt).toLocaleString()}</td>
                     <td>
-                        <button class="edit-btn" onclick="editItem(${item.id})">✏️</button>
-                        <button class="delete-btn" onclick="deleteItem(${item.id})">🗑️</button>
+                        <button class="edit-btn" onclick="editRecord(${record.id})">✏️</button>
+                        <button class="delete-btn" onclick="deleteRecord(${record.id})">🗑️</button>
                     </td>
-                `;
+                </tr>`;
+                tbody.innerHTML += rowHtml;
             });
         }
 
-        // Добавление данных
-        document.getElementById('data-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('item-name').value;
-            const category = document.getElementById('item-category').value;
-            const value = parseFloat(document.getElementById('item-value').value);
-            const description = document.getElementById('item-description').value;
+        // Редактирование записи
+        function editRecord(id) {
+            const record = allRecords.find(r => r.id === id);
+            if (!record) return;
             
-            try {
-                const response = await fetch('/api/data', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({name, category, value, description})
-                });
-                
-                if (response.ok) {
-                    showMessage('Данные успешно сохранены!');
-                    document.getElementById('data-form').reset();
-                    loadData();
-                } else {
-                    showMessage('Ошибка при сохранении', 'error');
-                }
-            } catch (error) {
-                showMessage('Ошибка при сохранении', 'error');
+            // Очищаем форму
+            document.getElementById('dynamic-fields-container').innerHTML = '';
+            fieldCounter = 0;
+            
+            // Заполняем поля из записи
+            for (let [fieldName, fieldData] of Object.entries(record.data)) {
+                const fieldId = fieldCounter++;
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'dynamic-field';
+                fieldDiv.setAttribute('data-field-id', fieldId);
+                fieldDiv.innerHTML = `
+                    <button class="remove-field" onclick="removeField(${fieldId})">✖</button>
+                    <div class="form-group">
+                        <label>Название поля:</label>
+                        <input type="text" class="field-name" value="${fieldName}">
+                    </div>
+                    <div class="form-group">
+                        <label>Тип данных:</label>
+                        <select class="field-type" onchange="changeFieldType(${fieldId})">
+                            <option value="text" ${fieldData.type === 'text' ? 'selected' : ''}>📝 Текст</option>
+                            <option value="number" ${fieldData.type === 'number' ? 'selected' : ''}>🔢 Число</option>
+                            <option value="date" ${fieldData.type === 'date' ? 'selected' : ''}>📅 Дата</option>
+                            <option value="email" ${fieldData.type === 'email' ? 'selected' : ''}>📧 Email</option>
+                            <option value="tel" ${fieldData.type === 'tel' ? 'selected' : ''}>📞 Телефон</option>
+                            <option value="color" ${fieldData.type === 'color' ? 'selected' : ''}>🎨 Цвет</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Значение:</label>
+                        <input type="${fieldData.type}" class="field-value" value="${fieldData.value}">
+                    </div>
+                `;
+                document.getElementById('dynamic-fields-container').appendChild(fieldDiv);
             }
-        });
-
-        // Удаление записи
-        async function deleteItem(id) {
-            if (confirm('Вы уверены, что хотите удалить эту запись?')) {
-                try {
-                    await fetch(`/api/data/${id}`, {method: 'DELETE'});
-                    showMessage('Запись удалена');
-                    loadData();
-                    if (document.getElementById('analyze-tab').classList.contains('active')) {
-                        loadAnalysis();
-                    }
-                } catch (error) {
-                    showMessage('Ошибка при удалении', 'error');
-                }
-            }
+            
+            currentEditId = id;
+            switchTab('add');
+            showMessage('Редактирование записи...');
         }
 
-        // Редактирование записи
-        async function editItem(id) {
-            const item = allData.find(d => d.id === id);
-            if (!item) return;
-            
-            const newName = prompt('Введите новое название:', item.name);
-            if (newName) {
-                const newValue = prompt('Введите новое значение:', item.value);
-                if (newValue) {
-                    try {
-                        await fetch(`/api/data/${id}`, {
-                            method: 'PUT',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({
-                                name: newName,
-                                value: parseFloat(newValue),
-                                category: item.category,
-                                description: item.description
-                            })
-                        });
-                        showMessage('Запись обновлена');
-                        loadData();
-                        if (document.getElementById('analyze-tab').classList.contains('active')) {
-                            loadAnalysis();
-                        }
-                    } catch (error) {
-                        showMessage('Ошибка при обновлении', 'error');
-                    }
-                }
+        // Удаление записи
+        function deleteRecord(id) {
+            if (confirm('Удалить эту запись?')) {
+                let records = JSON.parse(localStorage.getItem('userData') || '[]');
+                records = records.filter(r => r.id !== id);
+                localStorage.setItem('userData', JSON.stringify(records));
+                loadData();
+                showMessage('Запись удалена');
             }
         }
 
         // Фильтрация данных
         function filterData() {
-            const searchTerm = document.getElementById('search-name').value.toLowerCase();
-            const category = document.getElementById('filter-category').value;
-            const minValue = parseFloat(document.getElementById('min-value').value);
-            const maxValue = parseFloat(document.getElementById('max-value').value);
+            const searchText = document.getElementById('global-search').value.toLowerCase();
+            const dateFilter = document.getElementById('date-filter').value;
             
-            let filtered = allData;
+            let filtered = allRecords;
             
-            if (searchTerm) {
-                filtered = filtered.filter(item => item.name.toLowerCase().includes(searchTerm));
+            if (searchText) {
+                filtered = filtered.filter(record => {
+                    return JSON.stringify(record.data).toLowerCase().includes(searchText);
+                });
             }
-            if (category !== 'all') {
-                filtered = filtered.filter(item => item.category === category);
-            }
-            if (!isNaN(minValue)) {
-                filtered = filtered.filter(item => item.value >= minValue);
-            }
-            if (!isNaN(maxValue)) {
-                filtered = filtered.filter(item => item.value <= maxValue);
+            
+            if (dateFilter) {
+                filtered = filtered.filter(record => {
+                    return record.createdAt.startsWith(dateFilter);
+                });
             }
             
             displayData(filtered);
-            updateFilteredStats(filtered);
+            
+            const resultsDiv = document.getElementById('filtered-results');
+            resultsDiv.innerHTML = `<p>🔍 Найдено записей: ${filtered.length}</p>`;
         }
 
-        // Обновление статистики фильтрации
-        function updateFilteredStats(data) {
-            const statsDiv = document.getElementById('filtered-stats');
-            const total = data.length;
-            const sum = data.reduce((acc, item) => acc + item.value, 0);
-            const avg = total > 0 ? sum / total : 0;
-            const max = data.length > 0 ? Math.max(...data.map(item => item.value)) : 0;
-            const min = data.length > 0 ? Math.min(...data.map(item => item.value)) : 0;
+        // Обновление статистики по полям
+        function updateFieldsStatistics() {
+            const statsDiv = document.getElementById('fields-statistics');
+            if (allRecords.length === 0) {
+                statsDiv.innerHTML = '<p>Нет данных для анализа</p>';
+                return;
+            }
             
-            statsDiv.innerHTML = `
-                <h3>Результаты фильтрации:</h3>
-                <p>📊 Количество записей: ${total}</p>
-                <p>💰 Сумма значений: ${sum.toFixed(2)}</p>
-                <p>📈 Среднее значение: ${avg.toFixed(2)}</p>
-                <p>📉 Максимум: ${max}</p>
-                <p>📈 Минимум: ${min}</p>
-            `;
+            const fieldStats = {};
+            allRecords.forEach(record => {
+                Object.keys(record.data).forEach(field => {
+                    if (!fieldStats[field]) {
+                        fieldStats[field] = { count: 0, values: new Set() };
+                    }
+                    fieldStats[field].count++;
+                    fieldStats[field].values.add(record.data[field].value);
+                });
+            });
+            
+            let statsHtml = '<table><thead><tr><th>Поле</th><th>Количество</th><th>Уникальных значений</th></tr></thead><tbody>';
+            for (let [field, stats] of Object.entries(fieldStats)) {
+                statsHtml += `<tr>
+                    <td>${field}</td>
+                    <td>${stats.count}</td>
+                    <td>${stats.values.size}</td>
+                </tr>`;
+            }
+            statsHtml += '</tbody></table>';
+            statsDiv.innerHTML = statsHtml;
         }
 
         // Загрузка анализа
-        async function loadAnalysis() {
-            try {
-                const response = await fetch('/api/analysis');
-                const analysis = await response.json();
-                
-                // Статистические карточки
-                const statsGrid = document.getElementById('stats-grid');
-                statsGrid.innerHTML = `
-                    <div class="stat-card">
-                        <h3>Всего записей</h3>
-                        <div class="value">${analysis.total_count}</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Сумма значений</h3>
-                        <div class="value">${analysis.total_sum.toFixed(2)}</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Среднее значение</h3>
-                        <div class="value">${analysis.average_value.toFixed(2)}</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Максимум</h3>
-                        <div class="value">${analysis.max_value}</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Минимум</h3>
-                        <div class="value">${analysis.min_value}</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Медиана</h3>
-                        <div class="value">${analysis.median_value.toFixed(2)}</div>
-                    </div>
-                `;
-                
-                // График по категориям
-                if (categoryChart) categoryChart.destroy();
-                const ctx1 = document.getElementById('category-chart').getContext('2d');
-                categoryChart = new Chart(ctx1, {
+        function loadAnalysis() {
+            const totalCount = allRecords.length;
+            const totalFields = allRecords.reduce((sum, r) => sum + Object.keys(r.data).length, 0);
+            
+            document.getElementById('total-count').textContent = totalCount;
+            document.getElementById('total-fields').textContent = totalFields;
+            
+            // Собираем числовые данные
+            const numericData = [];
+            allRecords.forEach(record => {
+                Object.values(record.data).forEach(field => {
+                    if (field.type === 'number' && !isNaN(parseFloat(field.value))) {
+                        numericData.push(parseFloat(field.value));
+                    }
+                });
+            });
+            
+            if (numericData.length > 0) {
+                const ctx = document.getElementById('numeric-chart').getContext('2d');
+                new Chart(ctx, {
                     type: 'bar',
                     data: {
-                        labels: analysis.category_stats.map(item => item.category),
+                        labels: numericData.map((_, i) => `Значение ${i+1}`),
                         datasets: [{
-                            label: 'Сумма значений',
-                            data: analysis.category_stats.map(item => item.total),
-                            backgroundColor: 'rgba(102, 126, 234, 0.6)',
-                            borderColor: 'rgba(102, 126, 234, 1)',
-                            borderWidth: 1
+                            label: 'Числовые значения',
+                            data: numericData,
+                            backgroundColor: 'rgba(102, 126, 234, 0.6)'
                         }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { position: 'top' }
-                        }
                     }
                 });
-                
-                // Топ значений
-                if (topValuesChart) topValuesChart.destroy();
-                const ctx2 = document.getElementById('top-values-chart').getContext('2d');
-                topValuesChart = new Chart(ctx2, {
-                    type: 'horizontalBar',
-                    data: {
-                        labels: analysis.top_items.map(item => item.name),
-                        datasets: [{
-                            label: 'Значение',
-                            data: analysis.top_items.map(item => item.value),
-                            backgroundColor: 'rgba(118, 75, 162, 0.6)',
-                            borderColor: 'rgba(118, 75, 162, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { position: 'top' }
-                        }
-                    }
-                });
-                
-                // Временная шкала
-                if (timelineChart) timelineChart.destroy();
-                const ctx3 = document.getElementById('timeline-chart').getContext('2d');
-                timelineChart = new Chart(ctx3, {
-                    type: 'line',
-                    data: {
-                        labels: analysis.timeline.map(item => item.date),
-                        datasets: [{
-                            label: 'Количество записей',
-                            data: analysis.timeline.map(item => item.count),
-                            backgroundColor: 'rgba(102, 126, 234, 0.2)',
-                            borderColor: 'rgba(102, 126, 234, 1)',
-                            borderWidth: 2,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { position: 'top' }
-                        }
-                    }
-                });
-            } catch (error) {
-                console.error('Ошибка загрузки анализа:', error);
             }
+            
+            // Статистика по полям
+            const fieldNames = {};
+            allRecords.forEach(record => {
+                Object.keys(record.data).forEach(field => {
+                    fieldNames[field] = (fieldNames[field] || 0) + 1;
+                });
+            });
+            
+            const ctx2 = document.getElementById('fields-chart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(fieldNames),
+                    datasets: [{
+                        data: Object.values(fieldNames),
+                        backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe']
+                    }]
+                }
+            });
         }
 
         // Экспорт данных
-        async function exportData() {
-            try {
-                const response = await fetch('/api/export');
-                const data = await response.json();
-                const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `data_export_${new Date().toISOString()}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-                showMessage('Данные экспортированы');
-            } catch (error) {
-                showMessage('Ошибка при экспорте', 'error');
-            }
+        function exportData() {
+            const data = JSON.parse(localStorage.getItem('userData') || '[]');
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `data_export_${new Date().toISOString()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showMessage('Данные экспортированы');
         }
 
         // Импорт данных
-        async function importData(input) {
+        function importData(input) {
             const file = input.files[0];
             if (!file) return;
             
             const reader = new FileReader();
-            reader.onload = async function(e) {
+            reader.onload = function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
-                    const response = await fetch('/api/import', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(data)
-                    });
-                    if (response.ok) {
-                        showMessage('Данные импортированы');
-                        loadData();
-                    } else {
-                        showMessage('Ошибка при импорте', 'error');
-                    }
+                    localStorage.setItem('userData', JSON.stringify(data));
+                    showMessage('Данные импортированы');
+                    loadData();
                 } catch (error) {
                     showMessage('Неверный формат файла', 'error');
                 }
             };
             reader.readAsText(file);
+            input.value = '';
         }
 
         // Очистка всех данных
-        async function clearAllData() {
-            if (confirm('ВНИМАНИЕ! Это удалит все данные. Продолжить?')) {
-                try {
-                    await fetch('/api/clear', {method: 'DELETE'});
-                    showMessage('Все данные удалены');
-                    loadData();
-                    if (document.getElementById('analyze-tab').classList.contains('active')) {
-                        loadAnalysis();
-                    }
-                } catch (error) {
-                    showMessage('Ошибка при очистке', 'error');
-                }
+        function clearAllData() {
+            if (confirm('ВНИМАНИЕ! Это удалит ВСЕ данные. Продолжить?')) {
+                localStorage.removeItem('userData');
+                loadData();
+                showMessage('Все данные удалены');
             }
-        }
-
-        // Защита от XSS
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
         }
 
         // Инициализация
